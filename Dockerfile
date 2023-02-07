@@ -28,14 +28,12 @@ RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.
 RUN R -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')"
 
 
-
 #Install
 WORKDIR /bioMnorm
 COPY renv.lock renv.lock
 # approach one
-#ENV RENV_PATHS_LIBRARY renv/library
-
-#RUN Rscript -e 'renv::restore()'
+ENV RENV_PATHS_LIBRARY renv/library
+RUN Rscript -e 'renv::restore()'
 
 # approach two
 #RUN mkdir -p renv
@@ -54,8 +52,11 @@ COPY renv.lock renv.lock
 
 COPY ./app/* /srv/shiny-server/
 
+
 # CHANGE TO USER
-USER shiny
+USER root
+# Change to USER shiny and add permises so folder (ver error entrando dentro de BioMnorm a R (con R) y poniendo renv::restore(). Ahí dirá que no puede acceder a X folder)
+
 
 #EXPOSE 3838
 
