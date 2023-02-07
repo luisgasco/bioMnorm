@@ -51,12 +51,14 @@ RUN R -e "renv::isolate()"
 
 RUN ls -la
 RUN rm -r /srv/shiny-server/*
-# AQUI CAMBIA DE USUARIO/PROPIETARIO EL ROOT https://www.r-bloggers.com/2021/08/setting-up-a-transparent-reproducible-r-environment-with-docker-renv/
-COPY app/* /srv/shiny-server/
-
 
 # CHANGE TO USER
 USER shiny
+# AQUI CAMBIA DE USUARIO/PROPIETARIO EL ROOT https://www.r-bloggers.com/2021/08/setting-up-a-transparent-reproducible-r-environment-with-docker-renv/
+COPY app/* /srv/shiny-server/norm_proc/
+
+
+
 # Change to USER shiny and add permises so folder (ver error entrando dentro de BioMnorm a R (con R) y poniendo renv::restore(). Ahí dirá que no puede acceder a X folder)
 
 
