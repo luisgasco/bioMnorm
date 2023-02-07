@@ -50,6 +50,7 @@ RUN R -e "renv::isolate()"
 #RUN R -e "renv::repair()"
 
 RUN ls -la
+RUN rm -r /srv/shiny-server/*
 # AQUI CAMBIA DE USUARIO/PROPIETARIO EL ROOT https://www.r-bloggers.com/2021/08/setting-up-a-transparent-reproducible-r-environment-with-docker-renv/
 COPY app/* /srv/shiny-server/
 
