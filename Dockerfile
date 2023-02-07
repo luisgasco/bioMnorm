@@ -28,8 +28,11 @@ RUN R -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')"
 #Install
 WORKDIR /bioMnorm
 COPY renv.lock renv.lock
-RUN Rscript -e 'install.packages("renv")'
+# approach one
+ENV RENV_PATHS_LIBRARY renv/library
+
 RUN Rscript -e 'renv::restore()'
+
 # approach two
 #RUN mkdir -p renv
 #COPY .Rprofile .Rprofile
