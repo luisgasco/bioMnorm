@@ -17,11 +17,13 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get -y update
 RUN apt-get -y install vim nano
 
-USER shiny
-WORKDIR /bioMnorm
+
 
 # GET FILES
 RUN git clone https://github.com/luisgasco/bioMnorm.git
+
+USER shiny
+WORKDIR /bioMnorm
 
 # ENVIRONMMENT
 ENV RENV_VERSION 0.16.0
