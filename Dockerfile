@@ -33,14 +33,14 @@ WORKDIR /bioMnorm
 COPY renv.lock renv.lock
 # approach one
 ENV RENV_PATHS_LIBRARY renv/library
-RUN Rscript -e 'renv::restore()'
+RUN Rscript -e 'renv::repair()'
 
 # approach two
 #RUN mkdir -p renv
 #COPY .Rprofile .Rprofile
 #COPY renv/activate.R renv/activate.R
 #COPY renv/settings.dcf renv/settings.dcf
-#RUN R -e "renv::restore()"
+#RUN R -e "renv::reapir()"
 
 
 #ENV _R_SHLIB_STRIP_=true
