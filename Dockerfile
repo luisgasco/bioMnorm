@@ -27,15 +27,15 @@ ENV RENV_VERSION 0.16.0
 RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))"
 RUN R -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')"
 
-USER shiny
+
 
 #Install
 WORKDIR /bioMnorm
 COPY renv.lock renv.lock
 # approach one
-ENV RENV_PATHS_LIBRARY renv/library
+#ENV RENV_PATHS_LIBRARY renv/library
 
-RUN Rscript -e 'renv::restore()'
+#RUN Rscript -e 'renv::restore()'
 
 # approach two
 #RUN mkdir -p renv
@@ -54,6 +54,8 @@ RUN Rscript -e 'renv::restore()'
 
 COPY ./app/* /srv/shiny-server/
 
+# CHANGE TO USER
+USER shiny
 
 #EXPOSE 3838
 
