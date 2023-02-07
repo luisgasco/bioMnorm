@@ -50,7 +50,7 @@ RUN Rscript -e 'renv::restore()'
 
 COPY ./app/* /srv/shiny-server/
 
-USER shiny
+#USER shiny
 
 #EXPOSE 3838
 
