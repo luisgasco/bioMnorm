@@ -32,23 +32,17 @@ RUN R -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')"
 WORKDIR /bioMnorm
 COPY renv.lock renv.lock
 # approach one
-ENV RENV_PATHS_LIBRARY renv/library
-RUN Rscript -e 'renv::repair()'
+# ENV RENV_PATHS_LIBRARY renv/library
+# RUN Rscript -e 'renv::restore()'
 
 # approach two
-#RUN mkdir -p renv
-#COPY .Rprofile .Rprofile
-#COPY renv/activate.R renv/activate.R
-#COPY renv/settings.dcf renv/settings.dcf
-#RUN R -e "renv::reapir()"
+RUN mkdir -p renv
+COPY .Rprofile .Rprofile
+COPY renv/activate.R renv/activate.R
+COPY renv/settings.dcf renv/settings.dcf
+RUN R -e "renv::repair()"
 
 
-#ENV _R_SHLIB_STRIP_=true
-#COPY Rprofile.site /etc/R
-#RUN install2.r --error --skipinstalled \
-#    shiny \
-#    jsonlite \
-#    htmltools
 
 COPY ./app/* /srv/shiny-server/
 
