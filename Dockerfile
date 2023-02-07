@@ -54,7 +54,7 @@ COPY ./app/* /srv/shiny-server/
 
 
 # CHANGE TO USER
-USER root
+USER shiny
 # Change to USER shiny and add permises so folder (ver error entrando dentro de BioMnorm a R (con R) y poniendo renv::restore(). Ahí dirá que no puede acceder a X folder)
 
 
