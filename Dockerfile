@@ -44,7 +44,8 @@ COPY .Rprofile .Rprofile
 COPY renv/activate.R renv/activate.R
 COPY renv/settings.dcf renv/settings.dcf
 RUN R -e "renv::repair()"
-
+RUN chmod -R 777 /bioMnorm/renv
+RUN R -e "renv::repair()"
 
 COPY ./app/* /srv/shiny-server/
 
