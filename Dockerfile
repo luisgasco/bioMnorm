@@ -4,6 +4,9 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends \
     git-core \
     libssl-dev \
+    libsasl2-dev \
+    libz-dev \
+    pkg-config \
     libcurl4-gnutls-dev \
     curl \
     libsodium-dev \
@@ -21,15 +24,18 @@ RUN git clone https://github.com/luisgasco/bioMnorm.git
 ENV RENV_VERSION 0.16.0
 RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))"
 RUN R -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')"
+
 #Install
 WORKDIR /bioMnorm
 COPY renv.lock renv.lock
+RUN Rscript -e 'install.packages("renv")'
+RUN Rscript -e 'renv::restore()'
 # approach two
-RUN mkdir -p renv
-COPY .Rprofile .Rprofile
-COPY renv/activate.R renv/activate.R
-COPY renv/settings.dcf renv/settings.dcf
-RUN R -e "renv::restore()"
+#RUN mkdir -p renv
+#COPY .Rprofile .Rprofile
+#COPY renv/activate.R renv/activate.R
+#COPY renv/settings.dcf renv/settings.dcf
+#RUN R -e "renv::restore()"
 
 
 #ENV _R_SHLIB_STRIP_=true
