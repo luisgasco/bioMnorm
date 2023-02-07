@@ -17,8 +17,8 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get -y update
 RUN apt-get -y install vim nano
 
-
 USER shiny
+WORKDIR /bioMnorm
 
 # GET FILES
 RUN git clone https://github.com/luisgasco/bioMnorm.git
@@ -29,7 +29,7 @@ RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.
 RUN R -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')"
 
 #Install
-WORKDIR /bioMnorm
+
 COPY renv.lock renv.lock
 # approach one
 ENV RENV_PATHS_LIBRARY renv/library
