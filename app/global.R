@@ -56,7 +56,7 @@ abbrev_id <- reactiveVal()
 
 # Cargamos  El diccionario de normalización
 loadDict  <- function() {
-diccionario <- read.csv("c:/Users/luisgasco/Documents/bioMnorm/diccionario.tsv",sep="\t",
+diccionario <- read.csv("~/bioMnorm/data/diccionario.tsv",sep="\t",
                         colClasses = c("code" = "character")) 
   
   # Apply function para obtener URL de diccionario.

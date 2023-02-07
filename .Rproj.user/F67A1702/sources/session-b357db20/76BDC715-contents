@@ -1,0 +1,286 @@
+# R dependencies
+library(shiny)
+library(shinydashboard)
+library(shinyjs)
+library(reticulate)
+library(jsonlite)
+library(shinycssloaders)
+library(tidyr)
+library(dplyr)
+library(shinyWidgets)
+library(RColorBrewer)
+library(pals)
+library(stringr)
+library(mongolite)
+
+options(mongodb = list(
+  "host" = "localhost",
+  "port" = "27017",
+  "username" = "admin",
+  "password"=""
+))
+databaseName <- "annot_norm_test"
+collectionName <- "pruebas4"
+
+## Load data from MongoDB 
+db <<- mongo(collection = collectionName,
+            db = databaseName,
+            url = paste0("mongodb://",options()$mongodb$host,":",options()$mongodb$port),
+            options = ssl_options(weak_cert_validation = TRUE))
+## Format _id for
+query_uid <- function(oid) {
+    stopifnot(is.character(oid), !anyNA(oid), length(oid) > 0L)
+    if (length(oid) == 1L) {
+        q <- list("_id" = list("$oid" = oid))
+    } else {
+        q <- list("_id" = list("$in" = lapply(oid, function(x) list("$oid" = x))))
+    }
+    jsonlite::toJSON(q, auto_unbox = TRUE, pretty = FALSE)
+}
+
+# Necesitaremos incorporar opcion de tipo de conexión (user o sin user)
+loadData <- function(db) {
+  # datos <- read.csv("c:/Users/luisgasco/Documents/bioMnorm/results_test2.tsv",sep="\t") 
+  # Connect to the database
+  datos <- db$find(field = '{}',sort='{"validated":1}')
+  datos
+}
+
+datos <- loadData(db)
+
+# Creamos reactive values
+context_id <- reactiveVal()
+context_id(gsub("[.#-]","_",paste0("contextx_",datos[1,]$filename_id)))
+composite_id <- reactiveVal()
+abbrev_id <- reactiveVal()
+
+# Cargamos  El diccionario de normalización
+loadDict  <- function() {
+diccionario <- read.csv("~/bioMnorm/data/diccionario.tsv",sep="\t",
+                        colClasses = c("code" = "character")) 
+  
+  # Apply function para obtener URL de diccionario.
+  parte_web1="https://browser.ihtsdotools.org/?perspective=full&conceptId1="
+  parte_web2="&edition=MAIN/SNOMEDCT-ES/2022-10-31&release=&languages=es"
+  diccionario<-  diccionario %>% 
+    rowwise()  %>%
+    mutate(url = paste0(parte_web1,code,parte_web2))
+  main_terms<-  diccionario  %>%
+    group_by(code)  %>%
+    filter(mainterm == 1) %>%
+    mutate(term = first(term)) %>%
+    mutate(sinonimo = "")
+  sinonimos <- diccionario  %>%
+    group_by(code)  %>%
+    filter(mainterm == 0) %>%
+    mutate(sinonimo = list(term))  %>%
+    distinct(code, sinonimo)  
+  diccionario <- merge(main_terms, sinonimos %>% 
+                         group_by(code) %>%
+                         mutate(sinonimo = list(sinonimo)), by = "code", all.x=TRUE)
+  
+  diccionario
+}
+
+diccionario <- loadDict()
+
+# Filtra diccionario
+filtra_dict <- function(datos,diccionario, row_sel) {
+  cadena = datos$codes[row_sel]
+  cadena_caracteres = gsub("]", "", cadena)
+  cadena_caracteres = gsub('\\[', "", cadena_caracteres)
+  cadena_caracteres = gsub(' ', "", cadena_caracteres)
+  lista <- unlist(strsplit(cadena_caracteres, split = ","))
+  dicc_filt <- diccionario %>%
+    filter(code %in% lista)
+  dicc_filt$order <- match(dicc_filt$code,lista)
+  dicc_filt <- dicc_filt %>% arrange(order)
+  return(dicc_filt)
+}
+
+
+# Obten lista de sinonimos en formato output dada una lista de strings
+get_list_sins <- function(lista_sinonimos){
+  lista = div(
+    lapply(1:length(lista_sinonimos), function(j) {
+      p(HTML(paste0(j,". ",lista_sinonimos[j])))}))
+  return(lista)
+}
+
+# Update dataframe con anotación seleccionada.
+
+update_dataframe =function(datos_reactive_var,input, code, name_relbox_code){
+  annotation_included = c(
+    "is_abb" = input[[abbrev_id()]],
+    "is_composite" = input[[composite_id()]],
+    "need_context" = input[[context_id()]],
+    "code" = code,
+    "sem_rel" = input[[name_relbox_code]]
+  )
+
+  annotation_included_str <-  paste(annotation_included, collapse = "#")
+  # Actualizamos el campo a validado
+  datos_reactive_var[row_sel,]$validated = "1"
+  datos_reactive_var[row_sel,]$annotation_included =  annotation_included_str
+  datos_reactive_var[row_sel,]
+}
+# Genera el output box para cada concepto
+code_box2<- function(termino, sem_tag, codigo, lista_sinonimos_html, icon = NULL, color = "aqua", width = 4,
+            href = NULL){
+            boxContent <- div(class = "estilo_sct",
+                              div(class="dot"),
+                              div(class = "inner",
+                                  p(style="width: 100%", 
+                                    HTML(paste0("<b>",termino," (",sem_tag,")</b>"))),
+                              ),
+                              div(class = "codigos",
+                                p(HTML(paste0("SCTID: ",codigo)))
+                              ),
+                              div(class = "sinonimos",
+                              lista_sinonimos_html,
+                              ),
+                              
+                              if (!is.null(icon)) div(class = "icon-large", icon)
+            )
+            
+            if (!is.null(href))
+              boxContent <- a(boxContent, href = href, target="_blank")
+            
+            div(class = if (!is.null(width)) paste0("col-sm-", width),
+                boxContent
+            )
+}
+
+# Calcula el texto con la mención highlightes
+calcula_texto = function(valor_entrada,datos_filtrados_fila, style_class) {
+  if(valor_entrada){
+    #IF True, cogemos valor inicial y final
+    span_ini = as.integer(unlist(strsplit(datos_filtrados_fila$filename_id, split = "#"))[2])
+    span_end = as.integer(unlist(strsplit(datos_filtrados_fila$filename_id, split = "#"))[3])
+    texto = datos_filtrados_fila$text
+    subcadena <- substr(texto, span_ini, span_end)
+    parte1 <- substr(texto, 1, span_ini-1)
+    parte2 <- substr(texto, span_end+1, nchar(texto))
+    label_ini = paste0("<span class=",style_class,">")
+    label_end = paste0("</span class=",style_class,">")
+    resultado <- paste0(parte1," ",label_ini, subcadena,label_end ," ",parte2)
+  }else{
+    resultado=""
+  }
+  return(resultado)
+  
+}
+# 
+
+generate_reactive_ui  <- function(dicc_filt, datos_reactivos, 
+                                  is_abb, is_composite, need_context,
+                                  code, sem_rel){
+    # Función para generar la interfaz reactiva para cada uno de las menciones.
+    # Cada mención tendrá su propia lista de codigos, etc.
+    # Los datos_reactivos serán data_reactive$data
+    tags$div(
+        tags$p(HTML(paste0("Mention: <b>",datos_reactivos$span[row_sel],"</b>"))),
+        tags$p(HTML(paste0("<b>Normalization needed data:</b>"))),
+        fluidRow(
+            column(4,
+                   awesomeCheckbox(inputId = abbrev_id(), 
+                                   label = "Is abbreviature?",
+                                   value = is_abb)
+            ),
+            column(4,
+                   awesomeCheckbox(inputId = composite_id(),
+                                   label = "Is composite?", 
+                                   value = is_composite)
+            ),
+            column(4,
+                   awesomeCheckbox(inputId = context_id(),
+                                   label = "Need context?", 
+                                   value = need_context)
+            ),
+        ),
+        tags$p(HTML(paste0("<b>Candidate codes:</b>"))),
+        fluidRow(
+            box(width = 12,
+                tags$div(style = "overflow-y: scroll;  max-height:300px",
+                         tags$table(style="width:100%",
+                                    tags$colgroup(
+                                        tags$col(span="1",style="width: 85%;"),
+                                        tags$col(span="1",style="width: 7%;"),
+                                        tags$col(span="1",style="width: 8%;")
+                                    ),
+                                    tags$tr(style="position: sticky;top: 0px; background-color: white;",
+                                            tags$th("code", style="position: None;"),
+                                            tags$th("check", style="position: None;"),
+                                            tags$th("sem_tag", style="position: None;")
+                                    ),
+                                    lapply(1:nrow(dicc_filt), function(i) {
+                                        lista_sinonimos <- unlist(dicc_filt$sinonimo.y[i])
+                                        lista_sinonimos_html = get_list_sins(lista_sinonimos)
+                                        tags$tr(
+                                            tags$td(
+                                                code_box2(codigo = dicc_filt$code[i], 
+                                                          termino=dicc_filt$term[i],
+                                                          sem_tag = dicc_filt$semantic_tag[i],
+                                                          lista_sinonimos =lista_sinonimos_html,
+                                                          href = dicc_filt$url[i],
+                                                          width = 12)
+                                            ),
+                                            tags$td(
+                                                prettyCheckbox(inputId = gsub("[.#-]","_",paste0("check_",dicc_filt$code[i],"_", datos_reactivos$filename_id[row_sel])),
+                                                               label = "",
+                                                               value = if(code==dicc_filt$code[i]) TRUE else FALSE,
+                                                               icon = icon("check"),
+                                                               status = "success",
+                                                               animation = "rotate",
+                                                               bigger = TRUE)
+                                            ),
+                                            tags$td(
+                                                prettyRadioButtons(inputId = gsub("[.#-]","_",paste0("rel_",dicc_filt$code[i],"_", datos_reactivos$filename_id[row_sel])),
+                                                                   label= "",
+                                                                   choices = c("EXACT", "NARROW","NO_IDEA"),
+                                                                   selected = if ((code==dicc_filt$code[i])&(sem_rel %in% c("EXACT", "NARROW","NO_IDEA"))) sem_rel else "",
+                                                                   icon = icon("check"),
+                                                                   status = "success",
+                                                                   animation = "jelly")
+                                            )
+                                        )
+                                    })
+                                    
+                         )
+                ),
+            ),
+        ),
+        fluidRow(
+            column(4,
+                   actionButton("save_data", "Save annotation")
+                   
+            ),
+            column(3,
+                   shinyjs::disabled(materialSwitch(
+                               inputId = "full_text",
+                               label = "Primary switch", 
+                               status = "primary",
+                               right = FALSE
+                           )
+                   )
+            )
+        ),
+        verbatimTextOutput('x4'),
+        tags$p(HTML(paste0("abbrevx_",datos_reactivos[row_sel,]$filename_id))),
+        tags$p(HTML(paste0("compositex_",datos_reactivos[row_sel,]$filename_id)))
+    )
+}
+
+# TESTS
+# cadena = datos$codes[1]
+# cadena_caracteres = gsub("]", "", cadena)
+# cadena_caracteres = gsub('\\[', "", cadena_caracteres)
+# cadena_caracteres = gsub(' ', "", cadena_caracteres)
+# lista <- unlist(strsplit(cadena_caracteres, split = ","))
+# 
+# filtrado <- diccionario %>%
+#   filter(code %in% lista)
+# filtrado$order <- match(filtrado$code,lista)
+# filtrado <- filtrado %>% arrange(order)
+
+

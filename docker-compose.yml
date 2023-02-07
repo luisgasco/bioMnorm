@@ -1,0 +1,18 @@
+version: "3.7"
+services:
+  shiny-app:
+    container_name: bioMnorm
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    ports:
+      - 27017:27017
+      - 3838:3838
+ #     - PUERTO_MONGO_LOCAL:27017
+ #     - PUERTO_FRONT_END:3838
+ #  expose:
+ #     - 3838
+    init: true
+    restart: always
+
+
