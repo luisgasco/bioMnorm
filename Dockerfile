@@ -38,15 +38,17 @@ COPY renv.lock renv.lock
 # Give permissions 
 RUN chmod -R 777 /bioMnorm/renv
 
-# approach two
-RUN mkdir -p renv
-COPY .Rprofile .Rprofile
-COPY renv/activate.R renv/activate.R
-COPY renv/settings.dcf renv/settings.dcf
-RUN R -e "renv::repair()"
-RUN chmod -R 777 /bioMnorm/renv
-RUN R -e "renv::repair()"
+# approach two (ESTO YA ESTA TEORICAMENTE en bioMnorm)
+RUN mkdir -p renv # Esta carpeta ya existe
+COPY .Rprofile .Rprofile # Esto ya está dentro del repositorio git
+COPY renv/activate.R renv/activate.R # Esto ya está dentro  del repositorio git
+COPY renv/settings.dcf renv/settings.dcf # Esto ya está dentro  del repositorio git
+RUN chown -R shiny . && sudo -u shiny R -e renv::restore()
+# RUN R -e "renv::restore()"
+# RUN chmod -R 777 /bioMnorm/renv/library/R-4.2/x86_64-pc-linux-gnu
+#RUN R -e "renv::repair()"
 
+# AQUI CAMBIA DE USUARIO/PROPIETARIO EL ROOT https://www.r-bloggers.com/2021/08/setting-up-a-transparent-reproducible-r-environment-with-docker-renv/
 COPY ./app/* /srv/shiny-server/
 
 
