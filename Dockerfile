@@ -43,9 +43,8 @@ RUN mkdir -p renv
 COPY .Rprofile .Rprofile 
 COPY renv/activate.R renv/activate.R 
 COPY renv/settings.dcf renv/settings.dcf 
-RUN chown -R shiny . \
- && sudo -u shiny R -e "renv::restore()"
-RUN sudo -u shiny R -e "renv::isolate()"
+RUN R -e "renv::restore()"
+RUN R -e "renv::isolate()"
 # RUN R -e "renv::restore()"
 # RUN chmod -R 777 /bioMnorm/renv/library/R-4.2/x86_64-pc-linux-gnu
 #RUN R -e "renv::repair()"
