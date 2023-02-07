@@ -55,10 +55,10 @@ RUN rm -r /srv/shiny-server/*
 # CHANGE TO USER
 USER shiny
 # AQUI CAMBIA DE USUARIO/PROPIETARIO EL ROOT https://www.r-bloggers.com/2021/08/setting-up-a-transparent-reproducible-r-environment-with-docker-renv/
-COPY app/* /srv/shiny-server/norm_proc/
-COPY renv/* /srv/shiny-server/norm_proc/renv/
-COPY data/* /srv/shiny-server/norm_proc/data/
-COPY www/* /srv/shiny-server/norm_proc/www/
+COPY app/* /srv/shiny-server/bioMnorm/app/
+COPY renv/* /srv/shiny-server/bioMnorm/renv/
+COPY data/* /srv/shiny-server/bioMnorm/data/
+COPY www/* /srv/shiny-server/bioMnorm/www/
 
 
 # Change to USER shiny and add permises so folder (ver error entrando dentro de BioMnorm a R (con R) y poniendo renv::restore(). Ahí dirá que no puede acceder a X folder)
