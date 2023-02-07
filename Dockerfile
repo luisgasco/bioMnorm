@@ -17,6 +17,9 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get -y update
 RUN apt-get -y install vim nano
 
+
+USER shiny
+
 # GET FILES
 RUN git clone https://github.com/luisgasco/bioMnorm.git
 
@@ -50,7 +53,6 @@ RUN Rscript -e 'renv::restore()'
 
 COPY ./app/* /srv/shiny-server/
 
-#USER shiny
 
 #EXPOSE 3838
 
