@@ -35,13 +35,15 @@ COPY renv.lock renv.lock
 # ENV RENV_PATHS_LIBRARY renv/library
 # RUN Rscript -e 'renv::restore()'
 
+# Give permissions 
+RUN chmod -R 777 /bioMnorm/renv
+
 # approach two
 RUN mkdir -p renv
 COPY .Rprofile .Rprofile
 COPY renv/activate.R renv/activate.R
 COPY renv/settings.dcf renv/settings.dcf
 RUN R -e "renv::repair()"
-
 
 
 COPY ./app/* /srv/shiny-server/
