@@ -18,7 +18,6 @@ RUN apt-get -y update
 RUN apt-get -y install vim nano
 
 
-
 # GET FILES
 RUN git clone https://github.com/luisgasco/bioMnorm.git
 
@@ -47,14 +46,18 @@ RUN R -e "renv::restore()"
 # CHANGE TO USER
 # AQUI CAMBIA DE USUARIO/PROPIETARIO EL ROOT https://www.r-bloggers.com/2021/08/setting-up-a-transparent-reproducible-r-environment-with-docker-renv/
 # Habrá qu cambiar la ruta relativa de UI.R
-COPY app/* /srv/shiny-server/bioMnorm/
+COPY ui.R /srv/shiny-server/bioMnorm/
+COPY global.R /srv/shiny-server/bioMnorm/
+COPY server.R /srv/shiny-server/bioMnorm/
 COPY renv/* /srv/shiny-server/bioMnorm/renv/
 COPY data/* /srv/shiny-server/bioMnorm/data/
 COPY www/* /srv/shiny-server/bioMnorm/www/
 
+RUN chown -R shiny:shiny /bioMnorm/renv/library/R-4.2/x86_64-pc-linux-gnu
+RUN chown -R shiny:shiny /root/.cache/R/renv/
 USER shiny
 
-
+# Entrar a srv/shiny-server/bioMnorm . A R y ejecutar renv:repair()
 # Change to USER shiny and add permises so folder (ver error entrando dentro de BioMnorm a R (con R) y poniendo renv::restore(). Ahí dirá que no puede acceder a X folder)
 
 

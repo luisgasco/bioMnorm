@@ -14,7 +14,7 @@ library(stringr)
 library(mongolite)
 
 options(mongodb = list(
-  "host" = "127.0.0.1",
+  "host" = "host.docker.internal", #localhost
   "port" = "27017",
   "username" = "admin",
   "password"=""

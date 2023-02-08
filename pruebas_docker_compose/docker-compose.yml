@@ -1,0 +1,10 @@
+version: '3'
+services:
+  mongodb:
+    image: mongo
+    volumes:
+    ports:
+      - "27017:27017"
+    command: mongod --bind_ip_all
+    volumes:
+      - /data/db:/data/db
