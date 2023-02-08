@@ -29,34 +29,29 @@ RUN R -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')"
 
 
 #Install
+RUN rm -r /srv/shiny-server/* && mkdir -p /srv/shiny-server/bioMnorm/renv && chown -R shiny:shiny /srv/shiny-server/bioMnorm
+
+
+USER shiny
+
+
 WORKDIR /bioMnorm
-COPY renv.lock renv.lock
-# approach one
-# ENV RENV_PATHS_LIBRARY renv/library
-# RUN Rscript -e 'renv::restore()'
+COPY renv.lock srv/shiny-server/bioMnorm/
+COPY renv/activate.R  /srv/shiny-server/bioMnorm/renv/
+COPY renv/activate.R  /srv/shiny-server/bioMnorm/renv/
+COPY .Rprofile /home/shiny/
 
-# Give permissions 
-RUN chmod -R 777 /bioMnorm/renv
-
-# approach two (ESTO YA ESTA TEORICAMENTE en bioMnorm)
-RUN mkdir -p renv 
-COPY .Rprofile .Rprofile 
-COPY renv/activate.R renv/activate.R 
-COPY renv/settings.dcf renv/settings.dcf 
 RUN R -e "renv::restore()"
 RUN R -e "renv::isolate()"
 
-RUN ls -la
-RUN rm -r /srv/shiny-server/*
 
 # CHANGE TO USER
-USER shiny
 # AQUI CAMBIA DE USUARIO/PROPIETARIO EL ROOT https://www.r-bloggers.com/2021/08/setting-up-a-transparent-reproducible-r-environment-with-docker-renv/
 # Habrá qu cambiar la ruta relativa de UI.R
-COPY app/* /srv/shiny-server/bioMnorm/
-COPY renv/* /srv/shiny-server/bioMnorm/renv/
-COPY data/* /srv/shiny-server/bioMnorm/data/
-COPY www/* /srv/shiny-server/bioMnorm/www/
+# COPY app/* /srv/shiny-server/bioMnorm/
+# COPY renv/* /srv/shiny-server/bioMnorm/renv/
+# COPY data/* /srv/shiny-server/bioMnorm/data/
+# COPY www/* /srv/shiny-server/bioMnorm/www/
 
 
 # Change to USER shiny and add permises so folder (ver error entrando dentro de BioMnorm a R (con R) y poniendo renv::restore(). Ahí dirá que no puede acceder a X folder)
