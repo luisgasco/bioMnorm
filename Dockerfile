@@ -34,13 +34,14 @@ RUN rm -r /srv/shiny-server/* && mkdir -p /srv/shiny-server/bioMnorm/renv && mkd
 
 
 WORKDIR /bioMnorm
-COPY renv.lock srv/shiny-server/bioMnorm/
+COPY renv.lock /srv/shiny-server/bioMnorm/
 COPY renv/activate.R  /srv/shiny-server/bioMnorm/renv/
 COPY renv/activate.R  /srv/shiny-server/bioMnorm/renv/
 COPY .Rprofile /home/shiny/
 
+WORKDIR /srv/shiny-server/bioMnorm
 RUN R -e "renv::hydrate()"
-#RUN R -e "renv::restore()"
+RUN R -e "renv::restore()"
 #RUN R -e "renv::isolate()"
 
 
