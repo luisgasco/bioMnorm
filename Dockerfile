@@ -39,26 +39,27 @@ COPY renv/activate.R  /srv/shiny-server/bioMnorm/renv/
 COPY renv/activate.R  /srv/shiny-server/bioMnorm/renv/
 COPY .Rprofile /home/shiny/
 
-WORKDIR /srv/shiny-server/bioMnorm
-RUN R -e "renv::hydrate()"
-RUN R -e "renv::restore()"
-#RUN R -e "renv::isolate()"
-
-
 # CHANGE TO USER
 # AQUI CAMBIA DE USUARIO/PROPIETARIO EL ROOT https://www.r-bloggers.com/2021/08/setting-up-a-transparent-reproducible-r-environment-with-docker-renv/
 # Habrá qu cambiar la ruta relativa de UI.R
 COPY ui.R /srv/shiny-server/bioMnorm/
 COPY global.R /srv/shiny-server/bioMnorm/
 COPY server.R /srv/shiny-server/bioMnorm/
+COPY .config_file /srv/shiny-server/bioMnorm/
 COPY renv/* /srv/shiny-server/bioMnorm/renv/
 COPY data/* /srv/shiny-server/bioMnorm/data/
 COPY www/* /srv/shiny-server/bioMnorm/www/
 
-#RUN chown -R shiny:shiny /bioMnorm/renv/library/R-4.2/x86_64-pc-linux-gnu
-#RUN chown -R shiny:shiny /root/.cache/R/renv/
-USER shiny
 
+
+WORKDIR /srv/shiny-server/bioMnorm
+#RUN R -e "renv::hydrate()"
+RUN R  -e "renv::restore(prompt=FALSE)"
+#RUN R -e "renv::isolate()"
+
+
+USER shiny
+RUN R  -e "renv::restore(prompt=FALSE)"
 
 
 
