@@ -55,7 +55,7 @@ RUN rm -r /srv/shiny-server/*
 # CHANGE TO USER
 USER shiny
 # AQUI CAMBIA DE USUARIO/PROPIETARIO EL ROOT https://www.r-bloggers.com/2021/08/setting-up-a-transparent-reproducible-r-environment-with-docker-renv/
-COPY app/* /srv/shiny-server/bioMnorm/app/
+COPY app/* /srv/shiny-server/bioMnorm/
 COPY renv/* /srv/shiny-server/bioMnorm/renv/
 COPY data/* /srv/shiny-server/bioMnorm/data/
 COPY www/* /srv/shiny-server/bioMnorm/www/
