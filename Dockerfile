@@ -29,10 +29,9 @@ RUN R -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')"
 
 
 #Install
-RUN rm -r /srv/shiny-server/* && mkdir -p /srv/shiny-server/bioMnorm/renv && chown -R shiny:shiny /srv/shiny-server/bioMnorm
+RUN rm -r /srv/shiny-server/* && mkdir -p /srv/shiny-server/bioMnorm/renv && mkdir -p /srv/shiny-server/bioMnorm/data && mkdir -p /srv/shiny-server/bioMnorm/www && chown -R shiny:shiny /srv/shiny-server/bioMnorm
 
 
-USER shiny
 
 
 WORKDIR /bioMnorm
@@ -48,10 +47,12 @@ RUN R -e "renv::isolate()"
 # CHANGE TO USER
 # AQUI CAMBIA DE USUARIO/PROPIETARIO EL ROOT https://www.r-bloggers.com/2021/08/setting-up-a-transparent-reproducible-r-environment-with-docker-renv/
 # Habrá qu cambiar la ruta relativa de UI.R
-# COPY app/* /srv/shiny-server/bioMnorm/
-# COPY renv/* /srv/shiny-server/bioMnorm/renv/
-# COPY data/* /srv/shiny-server/bioMnorm/data/
-# COPY www/* /srv/shiny-server/bioMnorm/www/
+COPY app/* /srv/shiny-server/bioMnorm/
+COPY renv/* /srv/shiny-server/bioMnorm/renv/
+COPY data/* /srv/shiny-server/bioMnorm/data/
+COPY www/* /srv/shiny-server/bioMnorm/www/
+
+USER shiny
 
 
 # Change to USER shiny and add permises so folder (ver error entrando dentro de BioMnorm a R (con R) y poniendo renv::restore(). Ahí dirá que no puede acceder a X folder)
