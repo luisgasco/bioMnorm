@@ -14,5 +14,8 @@ services:
  #     - 3838
     init: true
     restart: always
+    network_mode: "host"
+
+
 
 

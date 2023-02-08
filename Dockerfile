@@ -41,7 +41,7 @@ COPY renv/activate.R  /srv/shiny-server/bioMnorm/renv/
 COPY .Rprofile /home/shiny/
 
 RUN R -e "renv::restore()"
-RUN R -e "renv::isolate()"
+#RUN R -e "renv::isolate()"
 
 
 # CHANGE TO USER
