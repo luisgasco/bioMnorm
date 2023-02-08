@@ -13,20 +13,21 @@ library(pals)
 library(stringr)
 library(mongolite)
 
-options(mongodb = list(
-  "host" = "host.docker.internal", #localhost
-  "port" = "27017",
-  "username" = "admin",
-  "password"=""
-))
-databaseName <- "annot_norm_test"
-collectionName <- "pruebas4"
+readRenviron(".config_file")
+mongo_host <- Sys.getenv("MONGODB_HOST")
+mongo_port <- Sys.getenv("MONGODB_PORT")
+mongo_user <- Sys.getenv("MONGODB_USER")
+mongo_pass <- Sys.getenv("MONGODB_PASSWORD")
+mongo_database <- Sys.getenv("MONGODB_DATABASENAME")
+mongo_collection <- Sys.getenv("MONGODB_COLLECTIONNAME")
+abspath2dicc  <- Sys.getenv("DICCIONARY_ABS_PATH")
 
 ## Load data from MongoDB 
-db <<- mongo(collection = collectionName,
-            db = databaseName,
-            url = paste0("mongodb://",options()$mongodb$host,":",options()$mongodb$port),
+db <<- mongo(collection = mongo_collection,
+            db = mongo_database,
+            url = paste0("mongodb://",mongo_host,":",mongo_port),
             options = ssl_options(weak_cert_validation = TRUE))
+
 ## Format _id for
 query_uid <- function(oid) {
     stopifnot(is.character(oid), !anyNA(oid), length(oid) > 0L)
@@ -40,7 +41,6 @@ query_uid <- function(oid) {
 
 # Necesitaremos incorporar opcion de tipo de conexión (user o sin user)
 loadData <- function(db) {
-  # datos <- read.csv("c:/Users/luisgasco/Documents/bioMnorm/results_test2.tsv",sep="\t") 
   # Connect to the database
   datos <- db$find(field = '{}',sort='{"validated":1}')
   datos
@@ -56,7 +56,8 @@ abbrev_id <- reactiveVal()
 
 # Cargamos  El diccionario de normalización
 loadDict  <- function() {
-diccionario <- read.csv("~/bioMnorm/data/diccionario.tsv",sep="\t",
+    # /srv/shiny-server/bioMnorm/data/diccionario.tsv
+diccionario <- read.csv(abspath2dicc,sep="\t",
                         colClasses = c("code" = "character")) 
   
   # Apply function para obtener URL de diccionario.

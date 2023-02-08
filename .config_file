@@ -1,0 +1,14 @@
+#If running app in local : localhost
+#MONGODB_HOST="localhost"
+#If running app in docker : 
+MONGODB_HOST="host.docker.internal"
+MONGODB_PORT="27017"
+MONGODB_USER="admin"
+MONGODB_PASSWORD=""
+MONGODB_DATABASENAME="annot_norm_test"
+MONGODB_COLLECTIONNAME="pruebas4"
+# PATHS TO DATA
+#If running app in local : 
+#DICCIONARY_ABS_PATH="~/bioMnorm/data/diccionario.tsv"
+#If running app in docker : 
+DICCIONARY_ABS_PATH="/srv/shiny-server/bioMnorm/data/diccionario.tsv"
