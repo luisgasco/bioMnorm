@@ -6,15 +6,15 @@ services:
       context: ./
       dockerfile: Dockerfile
     ports:
-      - 27017:27017
-      - 3838:3838
+      - "127.0.0.1:27017:27017"
+      - "3838:3838"
  #     - PUERTO_MONGO_LOCAL:27017
  #     - PUERTO_FRONT_END:3838
  #  expose:
  #     - 3838
     init: true
     restart: always
-    network_mode: "host"
+ #   network_mode: "host"
 
 
 
