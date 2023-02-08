@@ -4,7 +4,7 @@ services:
     container_name: bioMnorm
     build:
       context: ./
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile2
     ports:
       - 27017:27017
       - 3838:3838
