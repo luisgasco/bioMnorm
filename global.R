@@ -53,6 +53,7 @@ context_id <- reactiveVal()
 context_id(gsub("[.#-]","_",paste0("contextx_",datos[1,]$filename_id)))
 composite_id <- reactiveVal()
 abbrev_id <- reactiveVal()
+  
 
 # Cargamos  El diccionario de normalización
 loadDict  <- function() {
@@ -123,6 +124,7 @@ update_dataframe =function(datos_reactive_var,input, code, name_relbox_code){
   # Actualizamos el campo a validado
   datos_reactive_var[row_sel,]$validated = "1"
   datos_reactive_var[row_sel,]$annotation_included =  annotation_included_str
+  datos_reactive_var[row_sel,]$no_code = input[["no_code"]]
   datos_reactive_var[row_sel,]
 }
 # Genera el output box para cada concepto
@@ -175,7 +177,7 @@ calcula_texto = function(valor_entrada,datos_filtrados_fila, style_class) {
 
 generate_reactive_ui  <- function(dicc_filt, datos_reactivos, 
                                   is_abb, is_composite, need_context,
-                                  code, sem_rel){
+                                  code, sem_rel,no_code){
     # Función para generar la interfaz reactiva para cada uno de las menciones.
     # Cada mención tendrá su propia lista de codigos, etc.
     # Los datos_reactivos serán data_reactive$data
@@ -252,20 +254,32 @@ generate_reactive_ui  <- function(dicc_filt, datos_reactivos,
             ),
         ),
         fluidRow(
-            column(4,
-                   actionButton("save_data", "Save annotation")
-                   
-            ),
-            column(3,
+            column(6,
                    shinyjs::disabled(materialSwitch(
-                               inputId = "full_text",
-                               label = "Primary switch", 
-                               status = "primary",
-                               right = FALSE
-                           )
+                       inputId = "full_text",
+                       label = "Show text", 
+                       status = "primary",
+                       right = FALSE
                    )
+                   )
+            ),
+            
+        ),
+        fluidRow(
+            column(6,
+                   awesomeCheckbox(inputId = "no_code",
+                                   label = "Code not found in candidates", 
+                                   value = no_code)
+            ),
+            
+            ),
+        fluidRow(
+            column(12,
+                   actionButton("save_data", "Save annotation")
             )
         ),
+            
+        
         verbatimTextOutput('x4'),
         tags$p(HTML(paste0("abbrevx_",datos_reactivos[row_sel,]$filename_id))),
         tags$p(HTML(paste0("compositex_",datos_reactivos[row_sel,]$filename_id)))

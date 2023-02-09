@@ -47,6 +47,7 @@ server = function(input, output,session) {
             composite_id(gsub("[.#-]","_",paste0("compositex_",datos_reactive$data[row_sel,]$filename_id)))
             context_id(gsub("[.#-]","_",paste0("contextx_",datos_reactive$data[row_sel,]$filename_id)))
             # print(input[[context_id]])
+            # Si seleciona una fila en el que el campo annotation_included esté vacio o sea nulo
             if (datos_reactive$data$annotation_included[row_sel] != "" & !is.na(datos_reactive$data$annotation_included[row_sel])){
                 # Desacemos la string de valores almacenada en el DATAFRAME
                 is_abb <- as.logical(unlist(strsplit(datos_reactive$data$annotation_included[row_sel], split = "#"))[1])
@@ -54,17 +55,17 @@ server = function(input, output,session) {
                 need_context <- as.logical(unlist(strsplit(datos_reactive$data$annotation_included[row_sel], split = "#"))[3])
                 code <- unlist(strsplit(datos_reactive$data$annotation_included[row_sel], split = "#"))[4]
                 sem_rel <- unlist(strsplit(datos_reactive$data$annotation_included[row_sel], split = "#"))[5]
-                
+                no_code <- as.logical(datos_reactive$data$no_code[row_sel])
                 # Generamos UI
                 generate_reactive_ui(dicc_filt, datos_reactive$data, 
                                     is_abb, is_composite, need_context,
-                                    code, sem_rel)
+                                    code, sem_rel,no_code)
 
             }else{
                 generate_reactive_ui(dicc_filt, datos_reactive$data, 
                                      is_abb=FALSE, is_composite=FALSE, 
-                                     need_context=FALSE,code="", sem_rel="")
-
+                                     need_context=FALSE,code="", sem_rel="",
+                                     no_code =as.logical(datos_reactive$data$no_code[row_sel]))
             }
            }else{
                 tags$p("Select row")
@@ -112,73 +113,118 @@ server = function(input, output,session) {
     print(input[[composite_id()]])
     print("need_context")
     print(input[[context_id()]])
-    
+    print("NO_CODE")
+    print(input[["no_code"]])
     print("GUARDAMOS CODIGO")
     
+    ## ITERAMOS SOBRE 2 FOR LOOPs. 
+    # Primero iteramos sobre todos los candidatos para verificar que sólo hay un 
+    # código seleccionado. Si el contador es mayor que 
+    # 1 sacamos un pop-up para indicar que se des-seleccionen.
     contador_codigos(0)
-    for (i in 1:nrow(dicc_filt)) {
-        # print("###################################################################")
-        # print(i)
-        # print(dicc_filt$code[i])
-        name_checkbox_code <- gsub("[.#-]","_",paste0("check_",dicc_filt$code[i],"_", datos_reactive$data$filename_id[row_sel]))
-        name_relbox_code <- gsub("[.#-]","_",paste0("rel_",dicc_filt$code[i],"_", datos_reactive$data$filename_id[row_sel]))
-        # # print("PRUEBAAAAAAAAAAAAAAAAAAAAAAAAA")
-        # # print(name_checkbox_code)
-        # print(input[[name_checkbox_code]])
-        # # print(name_relbox_code)
-        # print(input[[name_relbox_code]])
-        ## Si el input es true, lo guardamos en el contacdor reactivo para que salte el modal:
+    for (j in 1:nrow(dicc_filt)) {
+        # Generamos identificador para el checkbox y el radiobutton de sem_rel
+        name_checkbox_code <- gsub("[.#-]","_",paste0("check_",dicc_filt$code[j],"_", datos_reactive$data$filename_id[row_sel]))
+        name_relbox_code <- gsub("[.#-]","_",paste0("rel_",dicc_filt$code[j],"_", datos_reactive$data$filename_id[row_sel]))
         if (input[[name_checkbox_code]] ==TRUE){
             contador_codigos(contador_codigos() + 1 )
         }
-        # # Si se ha marcado el código y la etiqueta semántica está seleccionada. 
-        # Actualizamos/giarda,ps eñ resiñtadp
-        if (input[[name_checkbox_code]] ==TRUE & !(is.null(input[[name_relbox_code]])) ){
-            #     print("Codigo_con_valor_true")
-            #     print(dicc_filt$code[i])
-            #     print("Semantic_relation")
-            #     print(input[[name_relbox_code]])
-            #     print("LLEGA")
-            #     
-            # ACtualizamos datos reactivos y actualizamos/cambiamos datos de la tabla
-            datos_reactive$data[row_sel,] = update_dataframe(datos=datos_reactive$data,input=input,code= dicc_filt$code[i],name_relbox_code=name_relbox_code)
-            proxy1 %>% DT::replaceData(datos_reactive$data)
-            # Subimos los datos a la base de datos
-            db$update(query = query_uid(datos_reactive$data[row_sel,1]),
-                      jsonlite::toJSON(list("$set" = list("annotation_included" = datos_reactive$data[row_sel,]$annotation_included,
-                                                "validated" = datos_reactive$data[row_sel,]$validated)), auto_unbox = TRUE, pretty = FALSE)
-                      )
-            
+        if(contador_codigos()>1){
+            showModal(modalDialog(
+                title =       "Selección incorrecta",
+                easyClose = TRUE,
+                HTML("Has seleccionado dos códigos de la lista de forma simultánea. \n Por favor, antes de guardar revisa los códigos seleccionados.
+                      ")
+            ))
+            # Si hay dos códigos seleccionamos, evitamos que se entre al siguiente bucle
+            enter2secondfor = FALSE
+            break
         }else{
-            # showModal(modalDialog(
-            #     title = "Selección incorrecta",
-            #     "No has seleccionado la etiqueta semántica del descriptor elegido. 
-            #     Puede que la hayas seleccionado pero hayas olvidado marcar el código
-            #     de forma explicita. "
-            # ))
-            # NO GUARDAMOS NADA.
-      }
+            # Si no hay dos códigos seleccionamos, indicamos al código que netre al segundo bucle.
+            enter2secondfor = TRUE
+        }
     }
+    
+    # Entramos en el segundo bucle, de guardado. 
+    contador_codigos(0)
+    if(enter2secondfor==TRUE){
+        for (i in 1:nrow(dicc_filt)) {
+            # Generamos identificador para el checkbox y el radiobutton de sem_rel
+            name_checkbox_code <- gsub("[.#-]","_",paste0("check_",dicc_filt$code[i],"_", datos_reactive$data$filename_id[row_sel]))
+            name_relbox_code <- gsub("[.#-]","_",paste0("rel_",dicc_filt$code[i],"_", datos_reactive$data$filename_id[row_sel]))
+            # Contamos numero de códigos seleccionados
+            if (input[[name_checkbox_code]] ==TRUE){
+                contador_codigos(contador_codigos() + 1 )
+            }
+            
+            # Logica selectores
+            # Si algún codigo está seleccionado
+            if (input[[name_checkbox_code]] ==TRUE){
+                # Si el selector de relación semántica está seleccionado
+                if (!is.null(input[[name_relbox_code]])){
+                    # si el código de no_code está NO seleccionado
+                    if(input[["no_code"]]==FALSE){
+                        # ACtualizamos datos reactivos y actualizamos/cambiamos datos de la tabla
+                        datos_reactive$data[row_sel,] = update_dataframe(datos=datos_reactive$data,input=input,code= dicc_filt$code[i],name_relbox_code=name_relbox_code)
+                        proxy1 %>% DT::replaceData(datos_reactive$data)
+                        # Subimos los datos a la base de datos
+                        db$update(query = query_uid(datos_reactive$data[row_sel,1]),
+                                  jsonlite::toJSON(list("$set" = list("annotation_included" = datos_reactive$data[row_sel,]$annotation_included,
+                                                                      "validated" = datos_reactive$data[row_sel,]$validated)), auto_unbox = TRUE, pretty = FALSE)
+                        )
+                    }else{
+                        #Popup para deseleccionar no_code si hay codigos seleccionados
+                        showModal(modalDialog(title = "Selección incorrecta",
+                                              "Has seleccionado que ningún código sugerido
+                                          se puede asociar a la mención, pero has dejado marcado
+                                          los códigos. Por favor deselecciona todos los
+                                          códigos."
+                        ))
+                    }
+                }else{
+                    #POPUP para seleccionar semantic_relation
+                    showModal(modalDialog(title = "Selección incorrecta",
+                                          "No has seleccionado relación semántica asociada
+                                      al código elegido."
+                    ))
+                    break
+                }
+                # Si no hay codigos seleccionados
+            }else if((input[[name_checkbox_code]] ==FALSE)){
+                # Pero el selector de no_code si que lo está
+                if(input[["no_code"]]==TRUE){
+                    # ACtualizamos datos reactivos y actualizamos/cambiamos datos de la tabla
+                    datos_reactive$data[row_sel,] = update_dataframe(datos=datos_reactive$data,input=input,code= dicc_filt$code[i],name_relbox_code=name_relbox_code)
+                    proxy1 %>% DT::replaceData(datos_reactive$data)
+                    # Subimos los datos a la base de datos
+                    db$update(query = query_uid(datos_reactive$data[row_sel,1]),
+                              jsonlite::toJSON(list("$set" = list("annotation_included" = datos_reactive$data[row_sel,]$annotation_included,
+                                                                  "validated" = datos_reactive$data[row_sel,]$validated)), auto_unbox = TRUE, pretty = FALSE)
+                    )
+                }
+                
+            }else{
+                # NO GUARDAMOS NADA.
+            }
+        }
+    }
+    
     
   },ignoreInit = TRUE)  
  
-  observe(
-      if (contador_codigos()>1){
-          showModal(modalDialog(
-              title = "Selección incorrecta",
-              "Has seleccionado dos códigos de forma simultánea.Se ha guardado en 
-              la base de datos el código que habías marcado en segundo lugar (el 
-              código que aparece más abajo en la lista de candidatos). 
-              En el caso de que haya sido una equivocación, te recomendamos que 
-              vuelvas a acceder a la misma mención para verificar que es correcto. 
-              
-              Si no lo fuera, puedes guardar un nuevo código seleccionandólo junto
-              a su etiqueta semántica, y deseleccionando el código que no quieras
-              (la etiqueta semántica quedará marcada pero no se guardará.)"
-          ))
-      }
-      
-  )
+  # observe(
+  #     # Si se han seleccibserve(
+  #     # Si se han seleccionado más de dos códigos y se ha tocado guardar:
+  #     if (contador_codigos()>1){
+  #         showModal(modalDialog(
+  #             title =       "Selección incorrecta",
+  #             HTML("Has seleccionado dos códigos de la lista de forma simultánea. \n Por favor, revisa la mención que acabas de guardar ya que puede 
+  #             tener inconsistencias o resultados no esperados.
+  #             ")
+  #         ))
+  #     }
+  #     
+  # )
   # Haz el render UI del texto
   output$texto_output = renderUI({
     ## Compute needed filters
