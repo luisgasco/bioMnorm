@@ -43,6 +43,7 @@ query_uid <- function(oid) {
 loadData <- function(db) {
   # Connect to the database
   datos <- db$find(field = '{}',sort='{"validated":1}')
+  datos$validated = as.numeric(datos$validated)
   datos
 }
 
@@ -112,19 +113,36 @@ get_list_sins <- function(lista_sinonimos){
 # Update dataframe con anotación seleccionada.
 
 update_dataframe =function(datos_reactive_var,input, code, name_relbox_code){
-  annotation_included = c(
-    "is_abb" = input[[abbrev_id()]],
-    "is_composite" = input[[composite_id()]],
-    "need_context" = input[[context_id()]],
-    "code" = code,
-    "sem_rel" = input[[name_relbox_code]]
-  )
-
-  annotation_included_str <-  paste(annotation_included, collapse = "#")
+  
   # Actualizamos el campo a validado
-  datos_reactive_var[row_sel,]$validated = "1"
-  datos_reactive_var[row_sel,]$annotation_included =  annotation_included_str
-  datos_reactive_var[row_sel,]$no_code = input[["no_code"]]
+  if(input[["previously_annotated"]]==TRUE){
+      datos_reactive_var[row_sel,]$validated = 2
+      datos_reactive_var[row_sel,]$annotation_included =  "####"
+      datos_reactive_var[row_sel,]$no_code = input[["no_code"]]
+      datos_reactive_var[row_sel,]$previously_annotated = TRUE
+  }
+  else if(input[["previously_annotated"]]==FALSE){
+      if(input[["no_code"]]){
+          datos_reactive_var[row_sel,]$validated = 1
+          datos_reactive_var[row_sel,]$annotation_included =  "####"
+          datos_reactive_var[row_sel,]$no_code = input[["no_code"]]
+          datos_reactive_var[row_sel,]$previously_annotated = FALSE 
+      }else{
+          annotation_included = c(
+              "is_abb" = input[[abbrev_id()]],
+              "is_composite" = input[[composite_id()]],
+              "need_context" = input[[context_id()]],
+              "code" = code,
+              "sem_rel" = input[[name_relbox_code]]
+          )
+          
+          annotation_included_str <-  paste(annotation_included, collapse = "#")
+          datos_reactive_var[row_sel,]$validated = 1
+          datos_reactive_var[row_sel,]$annotation_included =  annotation_included_str
+          datos_reactive_var[row_sel,]$no_code = input[["no_code"]]
+          datos_reactive_var[row_sel,]$previously_annotated = FALSE 
+      }
+  }
   datos_reactive_var[row_sel,]
 }
 # Genera el output box para cada concepto
@@ -156,6 +174,8 @@ code_box2<- function(termino, sem_tag, codigo, lista_sinonimos_html, icon = NULL
 
 # Calcula el texto con la mención highlightes
 calcula_texto = function(valor_entrada,datos_filtrados_fila, style_class) {
+  # HABRIA QUE HACER LA QUERYT A LA BASE DE DATOS DE TEXTOS: filename_id = unlist(strsplit(datos_filtrados_fila$filename_id, split = "#"))[1])
+  # Recuperar ese texto y guardarlo en "texto"
   if(valor_entrada){
     #IF True, cogemos valor inicial y final
     span_ini = as.integer(unlist(strsplit(datos_filtrados_fila$filename_id, split = "#"))[2])
@@ -177,125 +197,120 @@ calcula_texto = function(valor_entrada,datos_filtrados_fila, style_class) {
 
 generate_reactive_ui  <- function(dicc_filt, datos_reactivos, 
                                   is_abb, is_composite, need_context,
-                                  code, sem_rel,no_code){
+                                  code, sem_rel,no_code, previously_annotated){
     # Función para generar la interfaz reactiva para cada uno de las menciones.
     # Cada mención tendrá su propia lista de codigos, etc.
     # Los datos_reactivos serán data_reactive$data
     tags$div(
-        tags$p(HTML(paste0("Mention: <b>",datos_reactivos$span[row_sel],"</b>"))),
-        tags$p(HTML(paste0("<b>Normalization needed data:</b>"))),
         fluidRow(
-            column(4,
-                   awesomeCheckbox(inputId = abbrev_id(), 
-                                   label = "Is abbreviature?",
-                                   value = is_abb)
-            ),
-            column(4,
-                   awesomeCheckbox(inputId = composite_id(),
-                                   label = "Is composite?", 
-                                   value = is_composite)
-            ),
-            column(4,
-                   awesomeCheckbox(inputId = context_id(),
-                                   label = "Need context?", 
-                                   value = need_context)
-            ),
+            column(6,tags$p(HTML(paste0("Mention: <b>",datos_reactivos$span[row_sel],"</b>")))),
+            column(6,materialSwitch(
+                inputId = "previously_annotated",
+                label = "Previously annotated", 
+                value = previously_annotated,
+                status = "warning")
+            )
         ),
-        tags$p(HTML(paste0("<b>Candidate codes:</b>"))),
-        fluidRow(
-            box(width = 12,
-                tags$div(style = "overflow-y: scroll;  max-height:300px",
-                         tags$table(style="width:100%",
-                                    tags$colgroup(
-                                        tags$col(span="1",style="width: 85%;"),
-                                        tags$col(span="1",style="width: 7%;"),
-                                        tags$col(span="1",style="width: 8%;")
-                                    ),
-                                    tags$tr(style="position: sticky;top: 0px; background-color: white;",
-                                            tags$th("code", style="position: None;"),
-                                            tags$th("check", style="position: None;"),
-                                            tags$th("sem_tag", style="position: None;")
-                                    ),
-                                    lapply(1:nrow(dicc_filt), function(i) {
-                                        lista_sinonimos <- unlist(dicc_filt$sinonimo.y[i])
-                                        lista_sinonimos_html = get_list_sins(lista_sinonimos)
-                                        tags$tr(
-                                            tags$td(
-                                                code_box2(codigo = dicc_filt$code[i], 
-                                                          termino=dicc_filt$term[i],
-                                                          sem_tag = dicc_filt$semantic_tag[i],
-                                                          lista_sinonimos =lista_sinonimos_html,
-                                                          href = dicc_filt$url[i],
-                                                          width = 12)
-                                            ),
-                                            tags$td(
-                                                prettyCheckbox(inputId = gsub("[.#-]","_",paste0("check_",dicc_filt$code[i],"_", datos_reactivos$filename_id[row_sel])),
-                                                               label = "",
-                                                               value = if(code==dicc_filt$code[i]) TRUE else FALSE,
-                                                               icon = icon("check"),
-                                                               status = "success",
-                                                               animation = "rotate",
-                                                               bigger = TRUE)
-                                            ),
-                                            tags$td(
-                                                prettyRadioButtons(inputId = gsub("[.#-]","_",paste0("rel_",dicc_filt$code[i],"_", datos_reactivos$filename_id[row_sel])),
-                                                                   label= "",
-                                                                   choices = c("EXACT", "NARROW","NO_IDEA"),
-                                                                   selected = if ((code==dicc_filt$code[i])&(sem_rel %in% c("EXACT", "NARROW","NO_IDEA"))) sem_rel else "",
-                                                                   icon = icon("check"),
-                                                                   status = "success",
-                                                                   animation = "jelly")
-                                            )
-                                        )
-                                    })
-                                    
-                         )
+    tags$div(id="candidate_list_elem",
+            tags$p(HTML(paste0("<b>Normalization needed data:</b>"))),
+            fluidRow(
+                column(4,
+                       awesomeCheckbox(inputId = abbrev_id(), 
+                                       label = "Is abbreviature?",
+                                       value = is_abb)
+                ),
+                column(4,
+                       awesomeCheckbox(inputId = composite_id(),
+                                       label = "Is composite?", 
+                                       value = is_composite)
+                ),
+                column(4,
+                       awesomeCheckbox(inputId = context_id(),
+                                       label = "Need context?", 
+                                       value = need_context)
                 ),
             ),
+            tags$p(HTML(paste0("<b>Candidate codes:</b>"))),
+            fluidRow(
+                box(width = 12,
+                    tags$div(style = "overflow-y: scroll;  max-height:300px",
+                             tags$table(style="width:100%",
+                                        tags$colgroup(
+                                            tags$col(span="1",style="width: 85%;"),
+                                            tags$col(span="1",style="width: 7%;"),
+                                            tags$col(span="1",style="width: 8%;")
+                                        ),
+                                        tags$tr(style="position: sticky;top: 0px; background-color: white;",
+                                                tags$th("code", style="position: None;"),
+                                                tags$th("check", style="position: None;"),
+                                                tags$th("sem_tag", style="position: None;")
+                                        ),
+                                        lapply(1:nrow(dicc_filt), function(i) {
+                                            lista_sinonimos <- unlist(dicc_filt$sinonimo.y[i])
+                                            lista_sinonimos_html = get_list_sins(lista_sinonimos)
+                                            tags$tr(
+                                                tags$td(
+                                                    code_box2(codigo = dicc_filt$code[i], 
+                                                              termino=dicc_filt$term[i],
+                                                              sem_tag = dicc_filt$semantic_tag[i],
+                                                              lista_sinonimos =lista_sinonimos_html,
+                                                              href = dicc_filt$url[i],
+                                                              width = 12)
+                                                ),
+                                                tags$td(
+                                                    prettyCheckbox(inputId = gsub("[.#-]","_",paste0("check_",dicc_filt$code[i],"_", datos_reactivos$filename_id[row_sel])),
+                                                                   label = "",
+                                                                   value = if(code==dicc_filt$code[i]) TRUE else FALSE,
+                                                                   icon = icon("check"),
+                                                                   status = "success",
+                                                                   animation = "rotate",
+                                                                   bigger = TRUE)
+                                                ),
+                                                tags$td(
+                                                    prettyRadioButtons(inputId = gsub("[.#-]","_",paste0("rel_",dicc_filt$code[i],"_", datos_reactivos$filename_id[row_sel])),
+                                                                       label= "",
+                                                                       choices = c("EXACT", "NARROW","NO_IDEA"),
+                                                                       selected = if ((code==dicc_filt$code[i])&(sem_rel %in% c("EXACT", "NARROW","NO_IDEA"))) sem_rel else "",
+                                                                       icon = icon("check"),
+                                                                       status = "success",
+                                                                       animation = "jelly")
+                                                )
+                                            )
+                                        })
+                                        
+                             )
+                    ),
+                ),
+            ),
+            fluidRow(
+                column(6,
+                       shinyjs::disabled(materialSwitch(
+                           inputId = "full_text",
+                           label = "Show text", 
+                           status = "success",
+                           right = FALSE
+                       ))
+                       ),
+                column(6,
+                       awesomeCheckbox(inputId = "no_code",
+                                       label = "Code not found in candidates", 
+                                       value = no_code)
+                )
+                
+            ),
         ),
-        fluidRow(
-            column(6,
-                   shinyjs::disabled(materialSwitch(
-                       inputId = "full_text",
-                       label = "Show text", 
-                       status = "primary",
-                       right = FALSE
-                   )
-                   )
-            ),
-            
-        ),
-        fluidRow(
-            column(6,
-                   awesomeCheckbox(inputId = "no_code",
-                                   label = "Code not found in candidates", 
-                                   value = no_code)
-            ),
-            
-            ),
         fluidRow(
             column(12,
-                   actionButton("save_data", "Save annotation")
+                   actionButton("save_data", "Save annotation", width='100%')
             )
         ),
             
-        
-        verbatimTextOutput('x4'),
-        tags$p(HTML(paste0("abbrevx_",datos_reactivos[row_sel,]$filename_id))),
-        tags$p(HTML(paste0("compositex_",datos_reactivos[row_sel,]$filename_id)))
+        # DEBUG outputs
+        # tags$p(HTML("\n\n")),
+        # tags$p(HTML(paste0("abbrevx_",datos_reactivos[row_sel,]$filename_id))),
+        # tags$p(HTML(paste0("compositex_",datos_reactivos[row_sel,]$filename_id))),
+        # verbatimTextOutput('x4')
+    
     )
 }
-
-# TESTS
-# cadena = datos$codes[1]
-# cadena_caracteres = gsub("]", "", cadena)
-# cadena_caracteres = gsub('\\[', "", cadena_caracteres)
-# cadena_caracteres = gsub(' ', "", cadena_caracteres)
-# lista <- unlist(strsplit(cadena_caracteres, split = ","))
-# 
-# filtrado <- diccionario %>%
-#   filter(code %in% lista)
-# filtrado$order <- match(filtrado$code,lista)
-# filtrado <- filtrado %>% arrange(order)
-
 
