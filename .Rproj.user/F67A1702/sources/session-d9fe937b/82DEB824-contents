@@ -245,11 +245,16 @@ server = function(input, output,session) {
     output$texto_output = renderUI({
         ## Compute needed filters
         row_sel <- input$mytable_rows_selected
-        # GET DATA FROM TABLE TO DO QUERY IN MONGO EACH TIME. 
+        # Get filename related to the mention from dataframe. 
+        file_name = unlist(strsplit(datos[row_sel,]$filename_id,split="#"))[1] #"es-S0210-56912007000900007-3"
+        # Build the query
+        query_get_text = paste0('{','"filename_id"',':"',file_name,'"}')
+        # Get Text
+        texto = db_text$find(query = query_get_text)$text
         # DATA WILL BE SAVE WITH A BUTTON
         # If row is not selected, don't show anything.
         if (!is.null(row_sel)){
-            HTML(calcula_texto(TRUE,datos[row_sel,], "clase_show"))
+            HTML(calcula_texto(TRUE,datos[row_sel,],texto, "clase_show"))
             }
         })
 

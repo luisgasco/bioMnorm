@@ -19,14 +19,22 @@ mongo_port <- Sys.getenv("MONGODB_PORT")
 mongo_user <- Sys.getenv("MONGODB_USER")
 mongo_pass <- Sys.getenv("MONGODB_PASSWORD")
 mongo_database <- Sys.getenv("MONGODB_DATABASENAME")
-mongo_collection <- Sys.getenv("MONGODB_COLLECTIONNAME")
+mongo_collection <- Sys.getenv("MONGODB_COLLECTIONANNOTATION")
 abspath2dicc  <- Sys.getenv("DICCIONARY_ABS_PATH")
+mongo_collection_texts <- Sys.getenv("MONGODB_COLLECTIONTEXTS")
 
-## Load data from MongoDB 
+## Load annotation data from MongoDB 
 db <<- mongo(collection = mongo_collection,
             db = mongo_database,
             url = paste0("mongodb://",mongo_host,":",mongo_port),
             options = ssl_options(weak_cert_validation = TRUE))
+
+## Load text data from MongoDB 
+db_text <<- mongo(collection = mongo_collection_texts,
+             db = mongo_database,
+             url = paste0("mongodb://",mongo_host,":",mongo_port),
+             options = ssl_options(weak_cert_validation = TRUE))
+
 
 ## Format _id for
 query_uid <- function(oid) {
@@ -173,14 +181,14 @@ code_box2<- function(termino, sem_tag, codigo, lista_sinonimos_html, icon = NULL
 }
 
 # Calcula el texto con la mención highlightes
-calcula_texto = function(valor_entrada,datos_filtrados_fila, style_class) {
+calcula_texto = function(valor_entrada,datos_filtrados_fila,texto, style_class) {
   # HABRIA QUE HACER LA QUERYT A LA BASE DE DATOS DE TEXTOS: filename_id = unlist(strsplit(datos_filtrados_fila$filename_id, split = "#"))[1])
   # Recuperar ese texto y guardarlo en "texto"
   if(valor_entrada){
     #IF True, cogemos valor inicial y final
     span_ini = as.integer(unlist(strsplit(datos_filtrados_fila$filename_id, split = "#"))[2])
     span_end = as.integer(unlist(strsplit(datos_filtrados_fila$filename_id, split = "#"))[3])
-    texto = datos_filtrados_fila$text
+    # texto = datos_filtrados_fila$text
     subcadena <- substr(texto, span_ini, span_end)
     parte1 <- substr(texto, 1, span_ini-1)
     parte2 <- substr(texto, span_end+1, nchar(texto))
