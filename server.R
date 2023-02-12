@@ -14,14 +14,14 @@ server = function(input, output,session) {
   # Función paramostrar la DataTable
     output$mytable = DT::renderDataTable({
       # Select dataframe info.
-      df <- datos_reactive$data %>% select(filename_id,span,mention_class, codes,validated,text)
-      DT::datatable(df,rownames=FALSE,
+      datos_sel<- datos_reactive$data %>% select(filename_id,span,mention_class, codes,validated)
+      DT::datatable(datos_sel,rownames=FALSE,
                     options = list(
                         deferRender = TRUE,
                         scrollY = 400,
                         scroller = TRUE,
                         autoWidth = TRUE,
-                        columnDefs = list(list(visible=FALSE, targets=c(3,5))),
+                        columnDefs = list(list(visible=FALSE, targets=c(3))),
                         order = list(list(4,'asc'),list(3,'asc'))),
                     selection ="single",
                     extensions = c('Responsive',"Scroller")) %>%
