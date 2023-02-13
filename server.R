@@ -19,12 +19,13 @@ server = function(input, output,session) {
                     options = list(
                         deferRender = TRUE,
                         scrollY = 400,
+                        scrollX=TRUE,
                         scroller = TRUE,
                         autoWidth = TRUE,
                         columnDefs = list(list(visible=FALSE, targets=c(3))),
                         order = list(list(4,'asc'),list(3,'asc'))),
                     selection ="single",
-                    extensions = c('Responsive',"Scroller")) %>%
+                    extensions = c("Scroller")) %>% #'Responsive',
           DT::formatStyle( 'validated',
                            target = 'row',
                            backgroundColor = DT::styleEqual(c(0, 1,2), c('#f4f4f4', '#cbffe0','#fffddc')),
@@ -248,9 +249,9 @@ server = function(input, output,session) {
         # Get filename related to the mention from dataframe. 
         file_name = unlist(strsplit(datos[row_sel,]$filename_id,split="#"))[1] #"es-S0210-56912007000900007-3"
         # Build the query
-        query_get_text = paste0('{','"filename_id"',':"',file_name,'"}')
+        query_get_text <- paste0('{','"filename_id"',':"',file_name,'"}')
         # Get Text
-        texto = db_text$find(query = query_get_text)$text
+        texto <- db_text$find(query = query_get_text)$text[1]
         # DATA WILL BE SAVE WITH A BUTTON
         # If row is not selected, don't show anything.
         if (!is.null(row_sel)){

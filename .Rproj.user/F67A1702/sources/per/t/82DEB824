@@ -3,7 +3,7 @@
     "path": "~/bioMnorm/server.R",
     "project_path": "server.R",
     "type": "r_source",
-    "hash": "2875296583",
+    "hash": "2550677885",
     "contents": "",
     "dirty": false,
     "created": 1675848558071.0,
@@ -13,15 +13,15 @@
         "tempName": "Untitled1",
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "23,73",
-        "scrollLine": "8"
+        "cursorPosition": "27,66",
+        "scrollLine": "7"
     },
-    "folds": "34|34|77|6|\n80|39|86|8|\n90|40|96|8|\n103|45|112|8|\n142|42|163|12|\n",
-    "lastKnownWriteTime": 1676049620,
+    "folds": "35|34|78|6|\n91|40|97|8|\n104|45|113|8|\n143|42|164|12|\n",
+    "lastKnownWriteTime": 1676309459,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1676049620358,
+    "last_content_update": 1676309459390,
     "read_only": false,
     "read_only_alternatives": []
 }
