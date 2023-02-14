@@ -3,7 +3,7 @@
     "path": "~/bioMnorm/README.md",
     "project_path": "README.md",
     "type": "markdown",
-    "hash": "3397143648",
+    "hash": "0",
     "contents": "",
     "dirty": false,
     "created": 1676046003449.0,
@@ -12,15 +12,15 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "62,11",
+        "cursorPosition": "62,3",
         "scrollLine": "0"
     },
     "folds": "",
-    "lastKnownWriteTime": 1676048688,
+    "lastKnownWriteTime": 1676387361,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1676048688296,
+    "last_content_update": 1676387361,
     "read_only": false,
     "read_only_alternatives": []
 }

@@ -15,7 +15,12 @@ Then, modify the '.config_file' file by selecting the port where your database i
 
 After that, you can run docker-compose to access the application in the web browser
 ``` bash
-docker-compose -f docker-compose.yml up
+docker-compose -f docker-compose_local.yml up
+```
+
+If you are in a server environment, you might need to use the 'docker-compose_server.yml' :
+``` bash
+docker-compose -f docker-compose_server.yml up
 ```
 
 ## Database format

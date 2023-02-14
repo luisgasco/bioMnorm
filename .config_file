@@ -1,7 +1,9 @@
 #If running app in local : localhost
 #MONGODB_HOST="localhost"
 #If running app in docker: 
-MONGODB_HOST="host.docker.internal"
+#MONGODB_HOST="host.docker.internal"
+#If running app in server: 
+MONGODB_HOST="textmining2.bsc.es"
 MONGODB_PORT="27017"
 MONGODB_USER="admin"
 MONGODB_PASSWORD=""
