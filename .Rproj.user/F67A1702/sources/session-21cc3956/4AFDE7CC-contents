@@ -63,6 +63,20 @@ Note: You can also upload json files following this structure:
 mongoimport  --db DB_NAME --collection COLLECTION_NAME --file=JSON_FILE_NAME.json --type=json --jsonArray
 ```
 
+Note2: After changing any configuration parameter in the .config_file of the docker container, you should follow these steps:
+
+1. Enter to the docker container
+``` bash
+docker exec -u root -it DOCKER_ID bash
+```
+2. Change .config_file parameters
+``` bash
+nano .config_file
+```
+3. Restart shiny server
+``` bash
+sudo service shiny-server restart
+```
 
 ## License
 MIT License
