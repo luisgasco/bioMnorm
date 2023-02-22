@@ -10,6 +10,8 @@ MONGODB_PASSWORD=""
 MONGODB_DATABASENAME="annot_norm_test"
 MONGODB_COLLECTIONANNOTATION="test_annotations"
 MONGODB_COLLECTIONTEXTS="test_texts"
+#Seconds to freeze and stop app
+TIMEOUT_SECONDS=1800
 # PATHS TO DATA
 #If running app in local : 
 #DICCIONARY_ABS_PATH="~/bioMnorm/data/diccionario.tsv"

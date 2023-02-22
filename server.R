@@ -245,9 +245,9 @@ server = function(input, output,session) {
     # Render text around mention in the UI
     output$texto_output = renderUI({
         ## Compute needed filters
-        row_sel <- input$mytable_rows_selected
+        # No need to re-select thisrow_sel <- input$mytable_rows_selected
         # Get filename related to the mention from dataframe. 
-        file_name = unlist(strsplit(datos[row_sel,]$filename_id,split="#"))[1] #"es-S0210-56912007000900007-3"
+        file_name = unlist(strsplit(datos_reactive$data[row_sel,]$filename_id,split="#"))[1] #"es-S0210-56912007000900007-3"
         # Build the query
         query_get_text <- paste0('{','"filename_id"',':"',file_name,'"}')
         # Get Text
@@ -255,11 +255,25 @@ server = function(input, output,session) {
         # DATA WILL BE SAVE WITH A BUTTON
         # If row is not selected, don't show anything.
         if (!is.null(row_sel)){
-            HTML(calcula_texto(TRUE,datos[row_sel,],texto, "clase_show"))
+            HTML(calcula_texto(TRUE,datos_reactive$data[row_sel,],texto, "clase_show"))
             }
         })
 
-    
+    # Render modal if inactivity
+    observeEvent(input$timeOut, { 
+        print(paste0("Session (", session$token, ") timed out at: ", Sys.time()))
+        showModal(modalDialog(
+            title = "Timeout",
+            paste("Session timeout due to", input$timeOut, "inactivity -", Sys.time()),
+            footer = NULL
+        ))
+        session$close()
+        # stopApp()
+    })
+    # Si se cierra ventana, se cierran todas las sesiones y la aplicación
+    session$onSessionEnded(function() {
+        stopApp()
+    })
   # DEBUG Outputs
   # output$x4 = renderPrint({
   #   s = input$mytable_rows_selected

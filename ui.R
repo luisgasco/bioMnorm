@@ -11,6 +11,7 @@ sidebar <-dashboardSidebar(
 ## Body content
 body <- dashboardBody(shinyjs::useShinyjs(),
                         tags$head(
+                          tags$script(inactivity),
                           tags$link(rel = "stylesheet", type = "text/css", href = "mystyle.css")
                         ),
                         tabItems(
